@@ -20,7 +20,40 @@ def detect(img_path: str) -> Dict[str, int]:
     Dict[str, int]
         Dictionary with quantity of each object.
     """
+    #Colors borders in HSV
+    lowRedHSV1 = (175, 61, 68)
+    highRedHSV1 = (360, 255, 255)
+    lowRedHSV2 = (0, 83, 61)
+    highRedHSV2 = (4, 255, 255)
+    lowGreenHSV = (31, 38, 18)
+    highGreenHSV = (90, 255, 255)
+    lowYellowHSV = (2, 110, 177)
+    highYellowHSV = (33, 255, 255)
+    lowPurpleHSV = (130, 48, 33)
+    highPurpleHSV = (164, 199, 255)
+
+    # set image sizes for horizontal and vertical images
+    verSize = (720, 1280)
+    horSize = (1280, 720)
+    sqSize = (1280, 1280)
+
+    #Load thie image from file
     img = cv2.imread(img_path, cv2.IMREAD_COLOR)
+
+    #Change from BGR to HSV
+    imgHSV = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+
+    #Get actual image size
+    height, width, channels = img.shape
+
+    #Change size of image to smaller
+    if height < width:
+        resizedImg = cv2.resize(imgHSV, dsize=horSize)
+    elif height > width:
+        resizedImg = cv2.resize(imgHSV, dsize=verSize)
+    else:
+        resizedImg = cv2.resize(imgHSV, dsize=sqSize)
+
 
     #TODO: Implement detection method.
     
