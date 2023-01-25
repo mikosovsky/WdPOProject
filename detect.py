@@ -20,47 +20,76 @@ def detect(img_path: str) -> Dict[str, int]:
     Dict[str, int]
         Dictionary with quantity of each object.
     """
-    #Colors borders in HSV
-    lowRedHSV1 = (175, 61, 68)
-    highRedHSV1 = (360, 255, 255)
+    # Creating kernel matrix
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7))
+
+    # Colors borders in HSV
+    lowRedHSV1 = (175, 0, 68)
+    highRedHSV1 = (180, 255, 255)
     lowRedHSV2 = (0, 83, 61)
     highRedHSV2 = (4, 255, 255)
     lowGreenHSV = (31, 38, 18)
     highGreenHSV = (90, 255, 255)
-    lowYellowHSV = (2, 110, 177)
+    lowYellowHSV = (2, 80, 100)
     highYellowHSV = (33, 255, 255)
-    lowPurpleHSV = (130, 48, 33)
-    highPurpleHSV = (164, 199, 255)
+    lowPurpleHSV = (115, 25, 0)
+    highPurpleHSV = (177, 255, 230)
 
     # set image sizes for horizontal and vertical images
     verSize = (720, 1280)
     horSize = (1280, 720)
     sqSize = (1280, 1280)
-
-    #Load thie image from file
-    img = cv2.imread(img_path, cv2.IMREAD_COLOR)
-
-    #Change from BGR to HSV
-    imgHSV = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-
-    #Get actual image size
+    img = cv2.imread(img_path)
+    # Get actual image size
     height, width, channels = img.shape
 
-    #Change size of image to smaller
+    # Change size of image to smaller
     if height < width:
-        resizedImg = cv2.resize(imgHSV, dsize=horSize)
+        resizedImg = cv2.resize(img, dsize=horSize)
     elif height > width:
-        resizedImg = cv2.resize(imgHSV, dsize=verSize)
+        resizedImg = cv2.resize(img, dsize=verSize)
     else:
-        resizedImg = cv2.resize(imgHSV, dsize=sqSize)
+        resizedImg = cv2.resize(img, dsize=sqSize)
 
+    # Change from BGR to HSV
+    resizedImg = cv2.GaussianBlur(resizedImg, (5, 5), 0)
+    imgHSV = cv2.cvtColor(resizedImg, cv2.COLOR_BGR2HSV)
+
+    # Geting threshold of every color
+    red1Threshold = cv2.inRange(imgHSV, lowRedHSV1, highRedHSV1)
+    red2Threshold = cv2.inRange(imgHSV, lowRedHSV2, highRedHSV2)
+    redThreshold = red1Threshold + red2Threshold
+    redThreshold = cv2.erode(redThreshold, kernel, iterations=1)
+    redThreshold = cv2.morphologyEx(redThreshold, cv2.MORPH_OPEN, kernel)
+    redThreshold = cv2.morphologyEx(redThreshold, cv2.MORPH_CLOSE, kernel)
+
+    purpleThreshold = cv2.inRange(imgHSV, lowPurpleHSV, highPurpleHSV)
+    purpleThreshold = cv2.erode(purpleThreshold, kernel, iterations=1)
+    purpleThreshold = cv2.morphologyEx(purpleThreshold, cv2.MORPH_OPEN, kernel)
+    purpleThreshold = cv2.morphologyEx(purpleThreshold, cv2.MORPH_CLOSE, kernel)
+
+    greenThreshold = cv2.inRange(imgHSV, lowGreenHSV, highGreenHSV)
+    greenThreshold = cv2.erode(greenThreshold, kernel, iterations=1)
+    greenThreshold = cv2.morphologyEx(greenThreshold, cv2.MORPH_OPEN, kernel)
+    greenThreshold = cv2.morphologyEx(greenThreshold, cv2.MORPH_CLOSE, kernel)
+
+    yellowThreshold = cv2.inRange(imgHSV, lowYellowHSV, highYellowHSV)
+    yellowThreshold = cv2.erode(yellowThreshold, kernel, iterations=1)
+    yellowThreshold = cv2.morphologyEx(yellowThreshold, cv2.MORPH_OPEN, kernel)
+    yellowThreshold = cv2.morphologyEx(yellowThreshold, cv2.MORPH_CLOSE, kernel)
+
+    # Geting contours
+    contoursRed, hierarchyRed = cv2.findContours(redThreshold, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    contoursGreen, hierarchyGreen = cv2.findContours(greenThreshold, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    contoursPurple, hierarchyPurple = cv2.findContours(purpleThreshold, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    contoursYellow, hierarchyYellow = cv2.findContours(yellowThreshold, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     #TODO: Implement detection method.
     
-    red = 0
-    yellow = 0
-    green = 0
-    purple = 0
+    red = len(contoursRed)
+    yellow = len(contoursYellow)
+    green = len(contoursGreen)
+    purple = len(contoursPurple)
 
     return {'red': red, 'yellow': yellow, 'green': green, 'purple': purple}
 

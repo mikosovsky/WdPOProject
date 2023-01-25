@@ -1,4 +1,5 @@
 import json
+import ssl
 import urllib.error
 import urllib.request
 from http.client import HTTPResponse
@@ -17,12 +18,16 @@ def main():
     with ZipFile(data, 'w', ZIP_DEFLATED) as zip_file:
         base_path = Path.cwd()
         for file in base_path.rglob('*'):
+            if file.is_relative_to(base_path / 'data'):
+                continue
+
             zip_file.write(file, file.relative_to(base_path))
 
     data.seek(0)
 
+    ssl_context = ssl._create_unverified_context()
     try:
-        response: HTTPResponse = urllib.request.urlopen(f'{URL}/{student_id}', data.read())
+        response: HTTPResponse = urllib.request.urlopen(f'{URL}/{student_id}', data.read(), context=ssl_context)
         response: Dict[str, Any] = json.loads(response.read())
         print(response)
     except urllib.error.HTTPError as e:
